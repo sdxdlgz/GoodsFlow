@@ -42,6 +42,8 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', issues: error.issues }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    console.error('Import error:', error);
+    const message = error instanceof Error ? error.message : 'Internal error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
