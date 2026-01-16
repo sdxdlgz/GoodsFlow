@@ -27,14 +27,18 @@ export type ImportResult = {
   totalAmount: number;
 };
 
-export async function importExcelData(prisma: ImportPrisma, data: ExcelImportData): Promise<ImportResult> {
+export async function importExcelData(
+  prisma: ImportPrisma,
+  data: ExcelImportData,
+  groupId: string
+): Promise<ImportResult> {
   const validated = excelImportSchema.parse(data);
 
   return prisma.$transaction(async (tx) => {
     const period = await tx.period.upsert({
-      where: { name: validated.periodName },
+      where: { groupId_name: { groupId, name: validated.periodName } },
       update: {},
-      create: { name: validated.periodName },
+      create: { groupId, name: validated.periodName },
     });
 
     const productTypeIdByName = new Map<string, string>();

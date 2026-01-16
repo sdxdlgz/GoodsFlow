@@ -7,12 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Group {
+  id              String            @id @default(cuid())
+  name            String            @unique
+  slug            String            @unique
+  adminPassword   String
+  createdAt       DateTime          @default(now())
+  periods         Period[]
+  shipmentRequests ShipmentRequest[]
+}
+
 model Period {
   id           String        @id @default(cuid())
-  name         String        @unique
+  groupId      String
+  group        Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name         String
   createdAt    DateTime      @default(now())
   productTypes ProductType[]
   orders       Order[]
+
+  @@unique([groupId, name])
 }
 
 model ProductType {
@@ -55,6 +69,8 @@ model OrderItem {
 
 model ShipmentRequest {
   id           String   @id @default(cuid())
+  groupId      String
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   nickname     String
   address      String
   paymentProof String

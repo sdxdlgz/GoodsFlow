@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { importExcelData } from '@/lib/excel-import';
 import { parseExcelImport } from '@/lib/excel-parser';
 
+const TEST_GROUP_ID = 'test_group_123';
+
 function createMockPrisma() {
   const tx = {
     period: {
@@ -43,13 +45,13 @@ describe('importExcelData', () => {
     const data = parseExcelImport(buffer);
     const { prisma, tx } = createMockPrisma();
 
-    const result = await importExcelData(prisma as any, data);
+    const result = await importExcelData(prisma as any, data, TEST_GROUP_ID);
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(tx.period.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { name: '【测试】' },
-        create: { name: '【测试】' },
+        where: { groupId_name: { groupId: TEST_GROUP_ID, name: '【测试】' } },
+        create: { groupId: TEST_GROUP_ID, name: '【测试】' },
       }),
     );
 
@@ -64,7 +66,7 @@ describe('importExcelData', () => {
       totalAmount: 15,
     });
 
-    await importExcelData(prisma as any, data);
+    await importExcelData(prisma as any, data, TEST_GROUP_ID);
     expect(prisma.$transaction).toHaveBeenCalledTimes(2);
   });
 
@@ -82,7 +84,7 @@ describe('importExcelData', () => {
       throw new Error('DB failure');
     });
 
-    await expect(importExcelData(prisma as any, data)).rejects.toThrow('DB failure');
+    await expect(importExcelData(prisma as any, data, TEST_GROUP_ID)).rejects.toThrow('DB failure');
     expect(tx.orderItem.upsert).toHaveBeenCalledTimes(2);
   });
 
@@ -94,6 +96,6 @@ describe('importExcelData', () => {
     const broken = JSON.parse(JSON.stringify(data));
     broken.orders[0].items[0].productName = 'UNKNOWN';
 
-    await expect(importExcelData(prisma as any, broken as any)).rejects.toThrow('Unknown product type');
+    await expect(importExcelData(prisma as any, broken as any, TEST_GROUP_ID)).rejects.toThrow('Unknown product type');
   });
 });

@@ -31,15 +31,19 @@ function formatDateTime(value: string | null | undefined) {
 export function ArrivalManager({
   periodName,
   initialItems,
+  groupSlug,
 }: {
   periodName: string;
   initialItems: ArrivalProductType[];
+  groupSlug?: string;
 }) {
   const { toast } = useToast();
   const [items, setItems] = React.useState<ArrivalProductType[]>(initialItems);
   const [filter, setFilter] = React.useState<'all' | 'pending' | 'arrived'>('all');
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [saving, setSaving] = React.useState(false);
+
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
 
   const visibleItems = React.useMemo(() => {
     if (filter === 'all') return items;
@@ -78,7 +82,7 @@ export function ArrivalManager({
 
     setSaving(true);
     try {
-      const response = await fetch('/api/admin/arrival', {
+      const response = await fetch(`${apiPath}/admin/arrival`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ productTypeIds, arrived }),

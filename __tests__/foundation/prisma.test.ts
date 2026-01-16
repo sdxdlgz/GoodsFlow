@@ -22,7 +22,7 @@ describe('prisma singleton', () => {
   });
 
   it('reuses instance in development', async () => {
-    process.env.NODE_ENV = 'development';
+    (process.env as any).NODE_ENV = 'development';
     const first = await import('@/lib/prisma');
     vi.resetModules();
     const second = await import('@/lib/prisma');

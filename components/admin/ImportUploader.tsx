@@ -25,7 +25,7 @@ function isExcelFile(file: File) {
   return name.endsWith('.xlsx') || name.endsWith('.xls');
 }
 
-export function ImportUploader() {
+export function ImportUploader({ groupSlug }: { groupSlug?: string }) {
   const { toast } = useToast();
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -34,6 +34,9 @@ export function ImportUploader() {
   const [fileName, setFileName] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<ImportResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
+  const basePath = groupSlug ? `/g/${groupSlug}` : '';
 
   const uploadFile = React.useCallback(
     async (file: File) => {
@@ -52,7 +55,7 @@ export function ImportUploader() {
         const formData = new FormData();
         formData.set('file', file);
 
-        const response = await fetch('/api/admin/import', {
+        const response = await fetch(`${apiPath}/admin/import`, {
           method: 'POST',
           body: formData,
         });
@@ -81,7 +84,7 @@ export function ImportUploader() {
         setIsUploading(false);
       }
     },
-    [toast],
+    [toast, apiPath],
   );
 
   const onBrowse = () => inputRef.current?.click();
@@ -179,7 +182,7 @@ export function ImportUploader() {
                 </div>
                 <div className="flex items-end justify-start sm:justify-end">
                   <Link
-                    href="/admin/arrival"
+                    href={`${basePath}/admin/arrival`}
                     className={buttonVariants({ variant: 'primary', size: 'md' })}
                   >
                     去到货管理
@@ -203,11 +206,11 @@ export function ImportUploader() {
             <li>昵称请保持一致，系统会自动合并同名记录。</li>
           </ul>
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/arrival" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Link href={`${basePath}/admin/arrival`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               到货管理
             </Link>
             <Link
-              href="/admin/requests"
+              href={`${basePath}/admin/requests`}
               className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               排发审核

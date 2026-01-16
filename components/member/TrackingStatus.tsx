@@ -66,16 +66,18 @@ function buildTimeline(record: MemberTrackingRecord) {
   return steps;
 }
 
-export function TrackingStatus({ nickname }: { nickname: string }) {
+export function TrackingStatus({ nickname, groupSlug }: { nickname: string; groupSlug?: string }) {
   const [records, setRecords] = React.useState<MemberTrackingRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
 
   const load = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/shipment/status?nickname=${encodeURIComponent(nickname)}`, {
+      const response = await fetch(`${apiPath}/shipment/status?nickname=${encodeURIComponent(nickname)}`, {
         method: 'GET',
       });
       const data = (await response.json()) as { records?: MemberTrackingRecord[]; error?: string };
@@ -92,7 +94,7 @@ export function TrackingStatus({ nickname }: { nickname: string }) {
     } finally {
       setLoading(false);
     }
-  }, [nickname]);
+  }, [nickname, apiPath]);
 
   React.useEffect(() => {
     void load();

@@ -34,10 +34,11 @@ test('ArrivalManager marks selected items as arrived', async () => {
   await user.click(screen.getByRole('button', { name: '标记到货' }));
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-  const [, init] = fetchMock.mock.calls[0];
-  expect(init.method).toBe('PATCH');
+  const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit] | undefined;
+  const init = call?.[1];
+  expect(init?.method).toBe('PATCH');
 
-  const body = JSON.parse(init.body);
+  const body = JSON.parse(init?.body as string);
   expect(body).toEqual({ productTypeIds: ['a'], arrived: true });
 
   expect(screen.getAllByText('已到货').length).toBeGreaterThan(0);
@@ -122,8 +123,9 @@ test('ArrivalManager cancels arrived status', async () => {
   await user.click(screen.getByRole('button', { name: '取消到货' }));
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-  const [, init] = fetchMock.mock.calls[0];
-  expect(JSON.parse(init.body)).toEqual({ productTypeIds: ['b'], arrived: false });
+  const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit] | undefined;
+  const init = call?.[1];
+  expect(JSON.parse(init?.body as string)).toEqual({ productTypeIds: ['b'], arrived: false });
 
   expect(await screen.findByText('暂无数据')).toBeInTheDocument();
 });

@@ -41,7 +41,7 @@ function statusClassName(status: AdminShipmentRequest['status']) {
   return 'border-border bg-background/60 text-muted-foreground';
 }
 
-export function RequestList({ initialRequests }: { initialRequests?: AdminShipmentRequest[] }) {
+export function RequestList({ initialRequests, groupSlug }: { initialRequests?: AdminShipmentRequest[]; groupSlug?: string }) {
   const { toast } = useToast();
   const [requests, setRequests] = React.useState<AdminShipmentRequest[]>(initialRequests ?? []);
   const [loading, setLoading] = React.useState(initialRequests ? false : true);
@@ -50,11 +50,13 @@ export function RequestList({ initialRequests }: { initialRequests?: AdminShipme
   const [trackingById, setTrackingById] = React.useState<Record<string, string>>({});
   const [preview, setPreview] = React.useState<{ title: string; url: string } | null>(null);
 
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
+
   const load = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/admin/requests', { method: 'GET' });
+      const response = await fetch(`${apiPath}/admin/requests`, { method: 'GET' });
       const data = (await response.json()) as
         | { requests: AdminShipmentRequest[] }
         | { error?: string };
@@ -74,7 +76,7 @@ export function RequestList({ initialRequests }: { initialRequests?: AdminShipme
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, apiPath]);
 
   React.useEffect(() => {
     if (initialRequests) return;
@@ -90,7 +92,7 @@ export function RequestList({ initialRequests }: { initialRequests?: AdminShipme
 
     setBusyId(requestId);
     try {
-      const response = await fetch('/api/admin/approve', {
+      const response = await fetch(`${apiPath}/admin/approve`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ requestId, approved: true, trackingNumber }),
@@ -121,7 +123,7 @@ export function RequestList({ initialRequests }: { initialRequests?: AdminShipme
   const reject = async (requestId: string) => {
     setBusyId(requestId);
     try {
-      const response = await fetch('/api/admin/approve', {
+      const response = await fetch(`${apiPath}/admin/approve`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ requestId, approved: false }),

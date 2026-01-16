@@ -64,7 +64,7 @@ function deriveProducts(orders: OrdersApiOrder[]): ProductOption[] {
   return result;
 }
 
-export function ShipmentForm({ nickname }: { nickname: string }) {
+export function ShipmentForm({ nickname, groupSlug }: { nickname: string; groupSlug?: string }) {
   const { toast } = useToast();
   const [orders, setOrders] = React.useState<OrdersApiOrder[]>([]);
   const [products, setProducts] = React.useState<ProductOption[]>([]);
@@ -84,6 +84,8 @@ export function ShipmentForm({ nickname }: { nickname: string }) {
   const paymentUploadId = React.useRef(0);
   const shippingUploadId = React.useRef(0);
 
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
+
   const periodRef = React.useRef(period);
   React.useEffect(() => {
     periodRef.current = period;
@@ -93,7 +95,7 @@ export function ShipmentForm({ nickname }: { nickname: string }) {
     setLoading(true);
     setLoadError(null);
     try {
-      const response = await fetch(`/api/orders?nickname=${encodeURIComponent(nickname)}`, {
+      const response = await fetch(`${apiPath}/orders?nickname=${encodeURIComponent(nickname)}`, {
         method: 'GET',
       });
       const data = (await response.json()) as { orders?: OrdersApiOrder[]; error?: string };
@@ -138,7 +140,7 @@ export function ShipmentForm({ nickname }: { nickname: string }) {
     } finally {
       setLoading(false);
     }
-  }, [nickname]);
+  }, [nickname, apiPath]);
 
   React.useEffect(() => {
     void load();
@@ -287,7 +289,7 @@ export function ShipmentForm({ nickname }: { nickname: string }) {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/shipment/request', {
+      const response = await fetch(`${apiPath}/shipment/request`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

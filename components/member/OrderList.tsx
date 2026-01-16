@@ -41,16 +41,19 @@ function groupByPeriod(orders: MemberOrder[]) {
   return Array.from(byPeriod.entries());
 }
 
-export function OrderList({ nickname }: { nickname: string }) {
+export function OrderList({ nickname, groupSlug }: { nickname: string; groupSlug?: string }) {
   const [orders, setOrders] = React.useState<MemberOrder[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
+  const basePath = groupSlug ? `/g/${groupSlug}` : '';
 
   const load = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/orders?nickname=${encodeURIComponent(nickname)}`, {
+      const response = await fetch(`${apiPath}/orders?nickname=${encodeURIComponent(nickname)}`, {
         method: 'GET',
       });
       const data = (await response.json()) as { orders?: MemberOrder[]; error?: string };
@@ -67,7 +70,7 @@ export function OrderList({ nickname }: { nickname: string }) {
     } finally {
       setLoading(false);
     }
-  }, [nickname]);
+  }, [nickname, apiPath]);
 
   React.useEffect(() => {
     void load();
@@ -122,6 +125,7 @@ export function OrderList({ nickname }: { nickname: string }) {
             periodName={periodName}
             orders={periodOrders}
             nickname={nickname}
+            basePath={basePath}
           />
         ))
       )}
@@ -133,10 +137,12 @@ function PeriodSection({
   periodName,
   orders,
   nickname,
+  basePath,
 }: {
   periodName: string;
   orders: MemberOrder[];
   nickname: string;
+  basePath: string;
 }) {
   const items = orders.flatMap((o) => o.items ?? []);
   const arrivedItems = items.filter((i) => i.arrived && !i.shipped && i.quantity > 0);
@@ -160,7 +166,7 @@ function PeriodSection({
           </div>
           <div className="flex flex-wrap gap-2">
             <a
-              href={`/shipment?nickname=${encodeURIComponent(nickname)}`}
+              href={`${basePath}/shipment?nickname=${encodeURIComponent(nickname)}`}
               className={cn(
                 'inline-flex h-10 items-center justify-center rounded-full border border-border bg-background/70 px-4 text-sm',
                 'transition-all duration-300 hover:bg-accent hover:scale-[1.02] active:scale-[0.98]',

@@ -57,7 +57,7 @@ test('NicknameSearch debounces requests (300ms)', async () => {
   });
   expect(fetchMock).toHaveBeenCalledTimes(1);
 
-  expect(fetchMock.mock.calls[0]?.[0]).toContain('/api/orders?nickname=alice');
+  expect((fetchMock.mock.calls[0] as unknown as [string, RequestInit] | undefined)?.[0]).toContain('/api/orders?nickname=alice');
 });
 
 test('NicknameSearch navigates to orders', async () => {
@@ -207,7 +207,7 @@ test('NicknameSearch shows loading state for in-flight requests', async () => {
   expect(fetchMock).toHaveBeenCalledTimes(1);
   expect(screen.getByText('查询中…')).toBeInTheDocument();
 
-  resolveFetch?.({ ok: true, json: async () => ({ orders: [] }) });
+  resolveFetch!({ ok: true, json: async () => ({ orders: [] }) });
   await act(async () => {
     await Promise.resolve();
   });

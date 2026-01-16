@@ -51,6 +51,7 @@ export type NicknameSearchProps = {
   debounceMs?: number;
   showActions?: boolean;
   className?: string;
+  groupSlug?: string;
 };
 
 export function NicknameSearch({
@@ -58,6 +59,7 @@ export function NicknameSearch({
   debounceMs = 300,
   showActions = true,
   className,
+  groupSlug,
 }: NicknameSearchProps) {
   const router = useRouter();
   const [nickname, setNickname] = React.useState(defaultNickname);
@@ -67,6 +69,8 @@ export function NicknameSearch({
   const requestSeq = React.useRef(0);
 
   const trimmedNickname = nickname.trim();
+  const basePath = groupSlug ? `/g/${groupSlug}` : '';
+  const apiPath = groupSlug ? `/api/g/${groupSlug}` : '/api';
 
   const fetchSummary = React.useCallback(async (value: string) => {
     const seq = ++requestSeq.current;
@@ -74,7 +78,7 @@ export function NicknameSearch({
     setError(null);
 
     try {
-      const response = await fetch(`/api/orders?nickname=${encodeURIComponent(value)}`, {
+      const response = await fetch(`${apiPath}/orders?nickname=${encodeURIComponent(value)}`, {
         method: 'GET',
       });
       const data = (await response.json()) as { orders?: unknown; error?: string };
@@ -99,7 +103,7 @@ export function NicknameSearch({
     } finally {
       if (seq === requestSeq.current) setLoading(false);
     }
-  }, []);
+  }, [apiPath]);
 
   React.useEffect(() => {
     if (!trimmedNickname) {
@@ -119,7 +123,7 @@ export function NicknameSearch({
       setError('请输入昵称');
       return;
     }
-    router.push(`${pathname}?nickname=${encodeURIComponent(trimmedNickname)}`);
+    router.push(`${basePath}${pathname}?nickname=${encodeURIComponent(trimmedNickname)}`);
   };
 
   return (
