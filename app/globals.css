@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 253 252 248;
+    --foreground: 44 44 36;
+    --primary: 93 112 82;
+    --primary-foreground: 243 244 241;
+    --secondary: 193 140 93;
+    --secondary-foreground: 255 255 255;
+    --accent: 230 220 205;
+    --accent-foreground: 74 74 64;
+    --muted: 240 235 229;
+    --muted-foreground: 120 120 108;
+    --border: 222 216 207;
+    --destructive: 168 84 72;
+  }
+
+  .dark {
+    --background: 34 34 29;
+    --foreground: 253 252 248;
+    --primary: 139 168 120;
+    --primary-foreground: 34 34 29;
+    --secondary: 214 157 111;
+    --secondary-foreground: 34 34 29;
+    --accent: 74 74 64;
+    --accent-foreground: 253 252 248;
+    --muted: 48 48 40;
+    --muted-foreground: 198 192 181;
+    --border: 78 78 67;
+    --destructive: 200 94 80;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/noise.svg');
+  background-repeat: repeat;
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 50;
+}
+

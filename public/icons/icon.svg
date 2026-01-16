@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GoodsFlow icon">
+  <defs>
+    <linearGradient id="g" x1="72" y1="72" x2="440" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5D7052" />
+      <stop offset="1" stop-color="#C18C5D" />
+    </linearGradient>
+  </defs>
+  <path
+    fill="url(#g)"
+    d="M256 44c66 0 132 36 170 94 43 67 42 162-1 228-41 63-112 102-186 102-67 0-132-32-172-86-49-65-56-162-11-235 39-64 119-103 200-103Z"
+  />
+  <path
+    fill="#FDFCF8"
+    d="M184 182c0-10 8-18 18-18h96c10 0 18 8 18 18v52c0 10-8 18-18 18h-96c-10 0-18-8-18-18v-52Zm18 0v52h96v-52h-96Z"
+    opacity="0.92"
+  />
+  <path
+    fill="#FDFCF8"
+    d="M150 292c0-10 8-18 18-18h176c10 0 18 8 18 18s-8 18-18 18H168c-10 0-18-8-18-18Z"
+    opacity="0.9"
+  />
+  <path
+    fill="#FDFCF8"
+    d="M326 342c0-10 8-18 18-18h22c10 0 18 8 18 18v22c0 10-8 18-18 18h-22c-10 0-18-8-18-18v-22Z"
+    opacity="0.9"
+  />
+</svg>
+

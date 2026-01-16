@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Period {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  productTypes ProductType[]
+  orders       Order[]
+}
+
+model ProductType {
+  id        String   @id @default(cuid())
+  periodId  String
+  period    Period   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  name      String
+  unitPrice Float
+  arrived   Boolean  @default(false)
+  arrivedAt DateTime?
+  items     OrderItem[]
+
+  @@unique([periodId, name])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  periodId    String
+  period      Period      @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  nickname    String
+  totalAmount Float
+  items       OrderItem[]
+  shipments   Shipment[]
+
+  @@unique([periodId, nickname])
+}
+
+model OrderItem {
+  id            String      @id @default(cuid())
+  orderId       String
+  order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productTypeId String
+  productType   ProductType @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+  quantity      Int
+  subtotal      Float
+  shipped       Boolean     @default(false)
+
+  @@unique([orderId, productTypeId])
+}
+
+model ShipmentRequest {
+  id           String   @id @default(cuid())
+  nickname     String
+  address      String
+  paymentProof String
+  shippingProof String
+  items        Json
+  status       String
+  createdAt    DateTime @default(now())
+  shipment     Shipment?
+}
+
+model Shipment {
+  id             String          @id @default(cuid())
+  orderId        String
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  requestId      String          @unique
+  request        ShipmentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  trackingNumber String?
+  shippedAt      DateTime?
+  status         String
+}
