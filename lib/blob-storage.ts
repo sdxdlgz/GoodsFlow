@@ -158,7 +158,7 @@ class CloudflareImgbedStorage implements BlobStorage {
     const filename = key.split('/').pop() || `upload-${Date.now()}.bin`;
 
     const formData = new FormData();
-    const blob = new Blob([bytes], { type: options?.contentType || 'application/octet-stream' });
+    const blob = new Blob([new Uint8Array(bytes)], { type: options?.contentType || 'application/octet-stream' });
     formData.append('file', blob, filename);
 
     const params = new URLSearchParams();
