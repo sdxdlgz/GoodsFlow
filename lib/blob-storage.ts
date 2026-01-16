@@ -18,7 +18,7 @@ export type BlobStorage = {
   put: (pathname: string, body: ArrayBuffer | Uint8Array | Buffer, options?: BlobPutOptions) => Promise<BlobPutResult>;
 };
 
-export type BlobStorageMode = 'auto' | 'vercel' | 'local';
+export type BlobStorageMode = 'auto' | 'vercel' | 'local' | 'cloudflare-imgbed';
 
 export type BlobStorageConfig = {
   mode?: BlobStorageMode;
@@ -29,6 +29,11 @@ export type BlobStorageConfig = {
     rootDir?: string;
     publicBasePath?: string;
     appUrl?: string;
+  };
+  cloudflareImgbed?: {
+    baseUrl?: string;
+    token?: string;
+    uploadChannel?: string;
   };
 };
 
@@ -136,13 +141,91 @@ class VercelBlobStorage implements BlobStorage {
   }
 }
 
-export function createBlobStorage(config: BlobStorageConfig = {}): BlobStorage {
-  const token = config.vercel?.token ?? process.env.BLOB_READ_WRITE_TOKEN;
-  const mode = config.mode ?? 'auto';
-  const resolvedMode: Exclude<BlobStorageMode, 'auto'> =
-    mode === 'auto' ? (token ? 'vercel' : 'local') : mode;
+class CloudflareImgbedStorage implements BlobStorage {
+  private baseUrl: string;
+  private token: string;
+  private uploadChannel?: string;
 
-  if (resolvedMode === 'vercel') return new VercelBlobStorage(token);
+  constructor(baseUrl: string, token: string, uploadChannel?: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+    this.token = token;
+    this.uploadChannel = uploadChannel;
+  }
+
+  async put(pathname: string, body: ArrayBuffer | Uint8Array | Buffer, options?: BlobPutOptions) {
+    const bytes = toBuffer(body);
+    const key = normalizePathname(pathname);
+    const filename = key.split('/').pop() || `upload-${Date.now()}.bin`;
+
+    const formData = new FormData();
+    const blob = new Blob([bytes], { type: options?.contentType || 'application/octet-stream' });
+    formData.append('file', blob, filename);
+
+    const params = new URLSearchParams();
+    if (this.uploadChannel) {
+      params.set('uploadChannel', this.uploadChannel);
+    }
+    params.set('returnFormat', 'full');
+
+    const url = `${this.baseUrl}/upload?${params.toString()}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`CloudFlare ImgBed upload failed: ${response.status} ${text}`);
+    }
+
+    const result = await response.json() as Array<{ src: string }>;
+    if (!result?.[0]?.src) {
+      throw new Error('CloudFlare ImgBed returned invalid response');
+    }
+
+    const src = result[0].src;
+    const finalUrl = src.startsWith('http') ? src : `${this.baseUrl}${src.startsWith('/') ? '' : '/'}${src}`;
+
+    return {
+      url: finalUrl,
+      pathname: src,
+      size: bytes.byteLength,
+      contentType: options?.contentType,
+    } satisfies BlobPutResult;
+  }
+}
+
+export function createBlobStorage(config: BlobStorageConfig = {}): BlobStorage {
+  const vercelToken = config.vercel?.token ?? process.env.BLOB_READ_WRITE_TOKEN;
+  const imgbedUrl = config.cloudflareImgbed?.baseUrl ?? process.env.IMGBED_URL;
+  const imgbedToken = config.cloudflareImgbed?.token ?? process.env.IMGBED_TOKEN;
+  const imgbedChannel = config.cloudflareImgbed?.uploadChannel ?? process.env.IMGBED_CHANNEL;
+
+  const mode = config.mode ?? 'auto';
+
+  let resolvedMode: Exclude<BlobStorageMode, 'auto'>;
+  if (mode === 'auto') {
+    if (imgbedUrl && imgbedToken) {
+      resolvedMode = 'cloudflare-imgbed';
+    } else if (vercelToken) {
+      resolvedMode = 'vercel';
+    } else {
+      resolvedMode = 'local';
+    }
+  } else {
+    resolvedMode = mode;
+  }
+
+  if (resolvedMode === 'cloudflare-imgbed') {
+    if (!imgbedUrl || !imgbedToken) {
+      throw new Error('IMGBED_URL and IMGBED_TOKEN are required for cloudflare-imgbed mode');
+    }
+    return new CloudflareImgbedStorage(imgbedUrl, imgbedToken, imgbedChannel);
+  }
+  if (resolvedMode === 'vercel') return new VercelBlobStorage(vercelToken);
   return new LocalBlobStorage(config.local);
 }
 
