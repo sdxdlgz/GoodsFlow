@@ -17,7 +17,10 @@ type ImportTx = {
 };
 
 export type ImportPrisma = {
-  $transaction: <T>(fn: (tx: ImportTx) => Promise<T>) => Promise<T>;
+  $transaction: <T>(
+    fn: (tx: ImportTx) => Promise<T>,
+    options?: { maxWait?: number; timeout?: number }
+  ) => Promise<T>;
 };
 
 export type ImportResult = {
@@ -34,7 +37,8 @@ export async function importExcelData(
 ): Promise<ImportResult> {
   const validated = excelImportSchema.parse(data);
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(
+    async (tx) => {
     const period = await tx.period.upsert({
       where: { groupId_name: { groupId, name: validated.periodName } },
       update: {},
@@ -84,6 +88,11 @@ export async function importExcelData(
       totalOrders,
       totalAmount,
     };
-  });
+  },
+  {
+    maxWait: 60000,
+    timeout: 120000,
+  }
+  );
 }
 
